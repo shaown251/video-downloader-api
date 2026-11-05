@@ -31,7 +31,7 @@ app.get('/info',async(req,res)=>{
     out.push({id:'MP3 192 kbps',label:'MP3 192 kbps',tag:'Audio',audio:true,size:mb(D*24000)});
     out.push({id:'M4A',label:'M4A',tag:'Audio',audio:true,size:mb(aud||D*16000)});
     res.json({title:j.title,duration:D,thumbnail:j.thumbnail||'',formats:out});
-  }catch(e){res.status(422).json({error:'Could not read this video. It may be private or unavailable.'})}});
+  }catch(e){console.error('INFO FAIL',u,e.message);res.status(422).json({error:'Could not read this video. It may be private or unavailable.',detail:String(e.message).slice(0,300)})}});
 let jobs=0;
 app.get('/download',async(req,res)=>{
   const u=req.query.url,f=String(req.query.format||'');if(!okUrl(u))return res.status(400).send('Unsupported link');
@@ -48,5 +48,5 @@ app.get('/download',async(req,res)=>{
     const file=fs.readdirSync(tmp).find(n=>n.startsWith(id)&&!/\.(part|ytdl)$/.test(n));
     if(!file)throw new Error('no file');
     res.download(path.join(tmp,file),'video-downloader'+path.extname(file),()=>{clean();jobs--});
-  }catch(e){clean();jobs--;if(!res.headersSent)res.status(422).send('Download failed. The video may be private, too long or unavailable.')}});
+  }catch(e){console.error('DOWNLOAD FAIL',u,f,e.message);clean();jobs--;if(!res.headersSent)res.status(422).send('Download failed. The video may be private, too long or unavailable.')}});
 app.listen(PORT,()=>console.log('API on '+PORT));
